@@ -21,6 +21,8 @@ struct RootView: View {
                 PresetEditor(existing: nil)
             case .editPreset(let id):
                 PresetEditor(existing: model.presets.first { $0.id == id })
+            case .roomTune:
+                RoomTuneView()
             }
         }
     }

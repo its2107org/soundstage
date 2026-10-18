@@ -36,6 +36,7 @@ targets:
         LSApplicationCategoryType: public.app-category.entertainment
         SoundstageKeychainGroup: $(SOUNDSTAGE_KEYCHAIN_GROUP)
         NSLocalNetworkUsageDescription: Soundstage talks to your Klipsch soundbar directly over your home Wi-Fi.
+        NSMicrophoneUsageDescription: Soundstage listens to a short test sound from your seat to tune the soundbar to your room. Nothing is recorded or kept.
         NSBonjourServices:
           - _googlecast._tcp
           - _airplay._tcp

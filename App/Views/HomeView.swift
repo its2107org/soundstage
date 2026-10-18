@@ -273,7 +273,12 @@ struct HomeView: View {
     // MARK: Equaliser
 
     private var equaliserCard: some View {
-        Card("Equaliser") {
+        Card("Equaliser", trailing: AnyView(
+            Button { router.sheet = .roomTune } label: {
+                Label("Tune to room", systemImage: "wand.and.stars")
+                    .font(.subheadline.weight(.semibold))
+            }
+        )) {
             HStack(spacing: 4) {
                 BandSlider(title: "Bass", value: state.bass, range: Equaliser.range, tint: tint) { model.set(.bass($0), smooth: true) }
                 BandSlider(title: "Mid", value: state.mid, range: Equaliser.range, tint: tint) { model.set(.mid($0), smooth: true) }

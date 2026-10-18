@@ -40,9 +40,11 @@ final class Router {
         case settings
         case newPreset
         case editPreset(UUID)
+        case roomTune
 
         var id: String {
             switch self {
+            case .roomTune: "room-tune"
             case .settings: "settings"
             case .newPreset: "new-preset"
             case .editPreset(let id): "preset-\(id)"
@@ -57,6 +59,7 @@ final class Router {
         guard url.scheme == "soundstage" else { return }
         switch url.host() {
         case "settings": sheet = .settings
+        case "tune": sheet = .roomTune
         case "eq", "speakers", "presets": sheet = nil; scrollTarget = url.host()
         default: sheet = nil
         }

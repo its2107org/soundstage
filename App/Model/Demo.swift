@@ -29,6 +29,7 @@ enum Demo {
         let router = Router.shared
         if arguments.contains("-SoundstageDemoSettings") { router.sheet = .settings }
         if arguments.contains("-SoundstageDemoPreset") { router.sheet = .newPreset }
+        if arguments.contains("-SoundstageDemoTune") { router.sheet = .roomTune }
         if arguments.contains("-SoundstageDemoEQ") { router.scrollTarget = "eq" }
         if arguments.contains("-SoundstageDemoSpeakers") { router.scrollTarget = "speakers" }
     }
@@ -55,6 +56,39 @@ enum SelfTest {
         func check(_ name: String, _ ok: Bool) {
             log.append("\(ok ? "PASS" : "FAIL") \(name)")
             if !ok { passed = false }
+        }
+
+        // 0. Room tuning maths: a pink-noise test sound measured perfectly should need no change,
+        //    a boomy room should get less bass, and a too-quiet test should be refused.
+        if let pink = RoomTuning.pinkNoise(seconds: 4, sampleRate: 48_000), let data = pink.floatChannelData {
+            let samples = Array(UnsafeBufferPointer(start: data[0], count: Int(pink.frameLength)))
+            let levels = RoomTuning.bandLevels(samples, sampleRate: 48_000)
+            let flat = try? RoomTuning.corrections(noise: levels, ambient: levels.map { $0 - 40 })
+            let spread = (levels[1...].max() ?? 0) - (levels[1...].min() ?? 0)
+            check("pink noise measures flat (spread \(String(format: "%.1f", spread)) dB)", spread < 3)
+            if let flat {
+                check("flat room needs no change (\(flat.bass), \(flat.mid), \(flat.treble), sub \(flat.sub))",
+                      abs(flat.bass) <= 1 && abs(flat.mid) <= 1 && abs(flat.treble) <= 1 && abs(flat.sub) <= 1)
+            } else {
+                check("flat room analysed", false)
+            }
+        } else {
+            check("made pink noise", false)
+        }
+        let sine = (0..<96_000).map { Float(sin(2 * Double.pi * 1000 * Double($0) / 48_000)) }
+        let sineLevels = RoomTuning.bandLevels(sine, sampleRate: 48_000)
+        check("a 1 kHz tone lands in the 1 kHz band", sineLevels.firstIndex(of: sineLevels.max()!) == 5)
+        let boomy = [70.0, 70, 76, 73, 70, 70, 70, 70, 66]
+        if let fix = try? RoomTuning.corrections(noise: boomy, ambient: boomy.map { _ in 40 }) {
+            check("boomy room gets less bass, more treble (bass \(fix.bass), treble \(fix.treble))", fix.bass < 0 && fix.treble > 0)
+        } else {
+            check("boomy room analysed", false)
+        }
+        do {
+            _ = try RoomTuning.corrections(noise: boomy, ambient: boomy.map { $0 - 4 })
+            check("too-quiet test refused", false)
+        } catch {
+            check("too-quiet test refused", true)
         }
 
         let model = SoundbarModel.shared

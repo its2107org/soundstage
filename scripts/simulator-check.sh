@@ -72,6 +72,7 @@ for mode in light dark; do
   shoot "eq-$mode" -SoundstageDemo -SoundstageDemoEQ
   shoot "speakers-$mode" -SoundstageDemo -SoundstageDemoSpeakers
   shoot "preset-$mode" -SoundstageDemo -SoundstageDemoPreset
+  shoot "tune-$mode" -SoundstageDemo -SoundstageDemoTune
   shoot "settings-$mode" -SoundstageDemo -SoundstageDemoSettings
   shoot "off-$mode" -SoundstageDemo -SoundstageDemoOff
   shoot "unreachable-$mode" -SoundstageDemo -SoundstageDemoUnreachable
