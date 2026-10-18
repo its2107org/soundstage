@@ -19,6 +19,8 @@ final class SoundbarModel {
     private(set) var soundbar: SoundbarInfo?
     private(set) var presets: [Preset] = []
     private(set) var volumeStep = 4
+    /// 0.5 once the soundbar has shown it keeps half steps on the equaliser, otherwise 1.
+    private(set) var eqStep: Double = UserDefaults.standard.double(forKey: "eqStep") == 0.5 ? 0.5 : 1
     var state = SoundbarState()
     private(set) var connection: Connection = .connecting
 
@@ -58,6 +60,10 @@ final class SoundbarModel {
     func appBecameActive() {
         load()
         startPolling()
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            await self?.checkHalfSteps()
+        }
     }
 
     func appWentToBackground() {
@@ -267,6 +273,29 @@ final class SoundbarModel {
         await refreshNow()
         saveState()
         startPolling()
+        await checkHalfSteps()
+    }
+
+    /// Finds out whether the soundbar keeps half steps on the equaliser: nudges the treble by
+    /// half a step, reads it back, and puts it back. Done once.
+    func checkHalfSteps() async {
+        guard let link, !Demo.isDemo, UserDefaults.standard.object(forKey: "eqStep") == nil,
+              connection == .connected, state.power else { return }
+        let original = state.treble
+        let probe = original + (original < Equaliser.range.upperBound ? 0.5 : -0.5)
+        heldUntil["treble"] = Date().addingTimeInterval(5)
+        do {
+            try await link.set(SoundbarLink.Path.treble, ["type": "double_", "double_": probe])
+            try? await Task.sleep(for: .milliseconds(600))
+            let readBack = try await link.double(SoundbarLink.Path.treble)
+            try await link.apply(.treble(original))
+            let keepsHalves = abs(readBack - probe) < 0.01
+            eqStep = keepsHalves ? 0.5 : 1
+            UserDefaults.standard.set(eqStep, forKey: "eqStep")
+        } catch {
+            try? await link.apply(.treble(original))
+        }
+        heldUntil["treble"] = nil
     }
 
     func forgetSoundbar() {

@@ -119,7 +119,11 @@ struct RoundIconButton: View {
 }
 
 func signed(_ value: Int) -> String { value > 0 ? "+\(value)" : "\(value)" }
-func signed(_ value: Double) -> String { signed(Int(value.rounded())) }
+func signed(_ value: Double) -> String {
+    let rounded = (value * 2).rounded() / 2
+    if rounded == rounded.rounded() { return signed(Int(rounded)) }
+    return rounded > 0 ? String(format: "+%.1f", rounded) : String(format: "%.1f", rounded)
+}
 
 // MARK: - Volume slider
 
@@ -188,6 +192,7 @@ struct BandSlider: View {
     var title: String
     var value: Double
     var range: ClosedRange<Double>
+    var step: Double = 1
     var tint: Color
     var onChange: (Double) -> Void
 
@@ -224,7 +229,7 @@ struct BandSlider: View {
                             let start = dragStart ?? value
                             if dragStart == nil { dragStart = value }
                             let delta = -Double(drag.translation.height / max(1, height)) * span
-                            let next = min(range.upperBound, max(range.lowerBound, (start + delta).rounded()))
+                            let next = min(range.upperBound, max(range.lowerBound, ((start + delta) / step).rounded() * step))
                             if next != value { onChange(next) }
                         }
                         .onEnded { _ in dragStart = nil }
@@ -242,8 +247,8 @@ struct BandSlider: View {
         .accessibilityValue("\(signed(value)) decibels")
         .accessibilityAdjustableAction { direction in
             switch direction {
-            case .increment: onChange(min(range.upperBound, value + 1))
-            case .decrement: onChange(max(range.lowerBound, value - 1))
+            case .increment: onChange(min(range.upperBound, value + step))
+            case .decrement: onChange(max(range.lowerBound, value - step))
             @unknown default: break
             }
         }

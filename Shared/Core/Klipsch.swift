@@ -345,7 +345,9 @@ enum SoundbarChange: Sendable, Equatable {
 }
 
 extension Equaliser {
-    static func clamp(_ value: Double) -> Double { min(range.upperBound, max(range.lowerBound, value.rounded())) }
+    /// Keeps a value in range, to the nearest half step (the app only offers half steps when the
+    /// soundbar has shown it keeps them).
+    static func clamp(_ value: Double) -> Double { min(range.upperBound, max(range.lowerBound, (value * 2).rounded() / 2)) }
 }
 
 extension Preset {

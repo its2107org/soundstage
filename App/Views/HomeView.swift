@@ -280,9 +280,9 @@ struct HomeView: View {
             }
         )) {
             HStack(spacing: 4) {
-                BandSlider(title: "Bass", value: state.bass, range: Equaliser.range, tint: tint) { model.set(.bass($0), smooth: true) }
-                BandSlider(title: "Mid", value: state.mid, range: Equaliser.range, tint: tint) { model.set(.mid($0), smooth: true) }
-                BandSlider(title: "Treble", value: state.treble, range: Equaliser.range, tint: tint) { model.set(.treble($0), smooth: true) }
+                BandSlider(title: "Bass", value: state.bass, range: Equaliser.range, step: model.eqStep, tint: tint) { model.set(.bass($0), smooth: true) }
+                BandSlider(title: "Mid", value: state.mid, range: Equaliser.range, step: model.eqStep, tint: tint) { model.set(.mid($0), smooth: true) }
+                BandSlider(title: "Treble", value: state.treble, range: Equaliser.range, step: model.eqStep, tint: tint) { model.set(.treble($0), smooth: true) }
             }
             .padding(.vertical, 4)
             .sensoryFeedback(.selection, trigger: state.bass)

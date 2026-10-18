@@ -146,6 +146,12 @@ enum SelfTest {
             check("read back: \(error.localizedDescription)", false)
         }
 
+        // 3b. Does it keep half steps on the equaliser? (The pretend one does.)
+        await model.refreshNow()
+        await model.checkHalfSteps()
+        let treble = try? await SoundbarControl.refresh().treble
+        check("equaliser half steps detected (step \(model.eqStep)), treble put back (\(treble ?? -99))", model.eqStep == 0.5 && treble == 1)
+
         // 4. Volume buttons, a preset, and the power switch.
         do {
             let up = try await SoundbarControl.nudgeVolume(up: true, by: 4)
