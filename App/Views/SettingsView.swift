@@ -50,6 +50,7 @@ struct SettingsView: View {
                                 }
                             }
                         }
+                        .tint(.primary)
                     }
                     .onDelete { offsets in
                         for index in offsets.sorted(by: >) { model.deletePreset(model.presets[index]) }
