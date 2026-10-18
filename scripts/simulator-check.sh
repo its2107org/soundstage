@@ -26,14 +26,20 @@ mkdir -p shots
 
 # 1. End-to-end check against a pretend soundbar (on the normal web port, like the real one),
 #    which also announces itself on the network like the real one.
-sudo python3 scripts/fake_soundbar.py 80 shots/fake_soundbar.log &
+# (macOS lets ordinary programs use port 80, so no sudo is needed.)
+python3 -u scripts/fake_soundbar.py 80 shots/fake_soundbar.log > shots/fake_soundbar.out 2>&1 &
 BAR=$!
 dns-sd -R "Living Room" _googlecast._tcp local 80 md="Klipsch Cinema 1200" > /dev/null &
 ANNOUNCE=$!
-trap 'sudo kill $BAR 2>/dev/null || true; kill $ANNOUNCE 2>/dev/null || true' EXIT
-sleep 2
-curl -s "http://127.0.0.1/api/getData?path=settings:/system/manufacturer&roles=value" || { echo "::error::Pretend soundbar didn't start"; exit 1; }
+trap 'kill $BAR 2>/dev/null || true; kill $ANNOUNCE 2>/dev/null || true' EXIT
+STARTED=""
+for i in $(seq 1 20); do
+  if curl -s --max-time 3 "http://127.0.0.1/api/getData?path=settings:/system/manufacturer&roles=value"; then STARTED=1; break; fi
+  sleep 1
+done
 echo
+cat shots/fake_soundbar.out || true
+[ -n "$STARTED" ] || { echo "::error::Pretend soundbar didn't start"; sudo lsof -nP -iTCP:80 -sTCP:LISTEN || true; exit 1; }
 ifconfig | grep "inet " || true
 xcrun simctl launch --terminate-running-process "$UDID" "$BID" -SoundstageSelfTest
 for i in $(seq 1 60); do
