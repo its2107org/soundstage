@@ -110,7 +110,7 @@ enum Discovery {
         private static func text(for host: NWEndpoint.Host) -> String? {
             switch host {
             case .ipv4(let address):
-                return address.rawValue.map(String.init).joined(separator: ".")
+                return address.rawValue.map { String($0) }.joined(separator: ".")
             case .ipv6(let address):
                 // Strip any "%en0" interface suffix.
                 return "\(address)".components(separatedBy: "%").first
