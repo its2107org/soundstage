@@ -37,7 +37,7 @@ enum Demo {
         var setup = SavedSetup()
         setup.soundbar = SoundbarInfo(host: "192.168.1.42", name: "Living Room", model: "Klipsch Cinema 1200",
                                       serial: "KC1200-0042", firmware: "2.6.1")
-        setup.state = SoundbarState(power: true, volume: 32, muted: false, input: "tv", mode: "movie",
+        setup.state = SoundbarState(power: true, volume: 32, muted: false, input: "hdmiarc", mode: "movie",
                                     night: "nightMode_0", dialogue: "dialog_1", display: "dim",
                                     bass: 2, mid: 0, treble: 1,
                                     levels: ["sub": 2, "surr_L": 0, "surr_R": 0], updated: .now)

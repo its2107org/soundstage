@@ -12,9 +12,10 @@ struct HomeView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        header
+                        statusLine
                             .padding(.horizontal, 4)
-                            .padding(.bottom, 4)
+                            .padding(.top, -6)
+                            .padding(.bottom, 2)
                         switch (model.connection, state.power) {
                         case (.unreachable, _):
                             UnreachableCard()
@@ -39,6 +40,7 @@ struct HomeView: View {
                     .animation(.smooth(duration: 0.35), value: model.connection)
                 }
                 .scrollIndicators(.hidden)
+                .scrollEdgeEffectStyle(.soft, for: .top)
                 .refreshable { await model.refreshNow() }
                 .onChange(of: router.scrollTarget) { _, target in
                     guard let target else { return }
@@ -55,6 +57,9 @@ struct HomeView: View {
                 }
             }
             .background(AmbientBackground(colour: state.power && model.connection != .unreachable ? tint : nil))
+            // A proper title bar, so the page slides under a blurred bar instead of under the clock.
+            .navigationTitle(model.soundbar?.displayName ?? "Soundbar")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { router.sheet = .settings } label: {
@@ -80,21 +85,15 @@ struct HomeView: View {
 
     // MARK: Header
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(model.soundbar?.displayName ?? "Soundbar")
-                .font(.largeTitle.bold())
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(statusColour)
-                    .frame(width: 8, height: 8)
-                Text(statusText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .contentTransition(.opacity)
-            }
+    private var statusLine: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(statusColour)
+                .frame(width: 8, height: 8)
+            Text(statusText)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .contentTransition(.opacity)
         }
     }
 
@@ -228,7 +227,7 @@ struct HomeView: View {
                     } else if state.soundInput == nil {
                         Chip(title: state.inputTitle, symbol: "dot.radiowaves.left.and.right", selected: true, tint: tint)
                     }
-                    ForEach(SoundInput.selectable) { input in
+                    ForEach(SoundInput.choices(arc: SoundInput.usesARC(model: model.soundbar?.model, current: state.input))) { input in
                         Button { model.set(.input(input)) } label: {
                             Chip(title: input.title, symbol: input.symbol, selected: state.input == input.rawValue, tint: tint)
                         }

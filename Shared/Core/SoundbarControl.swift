@@ -36,7 +36,13 @@ enum SoundbarControl {
     @discardableResult
     static func perform(_ changes: [SoundbarChange], wakeIfNeeded: Bool = true) async throws -> SoundbarState {
         let link = try currentLink()
-        var state = Store.load().state
+        let setup = Store.load()
+        var state = setup.state
+        let arc = SoundInput.usesARC(model: setup.soundbar?.model, current: state.input)
+        let changes = changes.map { change -> SoundbarChange in
+            if case .input(.tv) = change, arc { return .input(.hdmiarc) }
+            return change
+        }
         if wakeIfNeeded, !changes.contains(where: { $0.field == "power" }) {
             if let on = try? await link.power(), !on {
                 try? await link.apply(.power(true))

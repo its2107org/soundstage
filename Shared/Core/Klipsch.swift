@@ -31,7 +31,7 @@ enum SoundMode: String, CaseIterable, Codable, Identifiable, Sendable {
 }
 
 enum SoundInput: String, CaseIterable, Codable, Identifiable, Sendable {
-    case tv, hdmi1, hdmi2, spdif, aux, bluetooth
+    case tv, hdmiarc, hdmi1, hdmi2, spdif, aux, bluetooth
     // Streaming inputs. The soundbar switches to these itself when something starts playing to it.
     case googlecast, spotify, alexa, airplay
 
@@ -39,11 +39,21 @@ enum SoundInput: String, CaseIterable, Codable, Identifiable, Sendable {
 
     static let selectable: [SoundInput] = [.tv, .hdmi1, .hdmi2, .spdif, .aux, .bluetooth]
 
-    var isSelectable: Bool { Self.selectable.contains(self) }
+    /// The Cinema 1200 calls its TV connection "hdmiarc" rather than "tv".
+    static func choices(arc: Bool) -> [SoundInput] {
+        arc ? [.hdmiarc, .hdmi1, .hdmi2, .spdif, .aux, .bluetooth] : selectable
+    }
+
+    var isSelectable: Bool { Self.selectable.contains(self) || self == .hdmiarc }
+
+    /// Whether this soundbar names its TV input "hdmiarc".
+    static func usesARC(model: String?, current: String) -> Bool {
+        current == SoundInput.hdmiarc.rawValue || (model ?? "").contains("1200")
+    }
 
     var title: String {
         switch self {
-        case .tv: "TV"
+        case .tv, .hdmiarc: "TV"
         case .hdmi1: "HDMI 1"
         case .hdmi2: "HDMI 2"
         case .spdif: "Optical"
@@ -58,7 +68,7 @@ enum SoundInput: String, CaseIterable, Codable, Identifiable, Sendable {
 
     var symbol: String {
         switch self {
-        case .tv: "tv"
+        case .tv, .hdmiarc: "tv"
         case .hdmi1, .hdmi2: "cable.connector.horizontal"
         case .spdif: "fibrechannel"
         case .aux: "cable.coaxial"
